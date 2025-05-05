@@ -1,4 +1,5 @@
-import os, stripe
+import os
+import stripe
 stripe.api_key = os.getenv('STRIPE_API_KEY')
 
 def issue_refund(amount, claimant_email):
