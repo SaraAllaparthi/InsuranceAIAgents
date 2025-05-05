@@ -1,23 +1,12 @@
-import os
-import sys
+import os, sys
 from dotenv import load_dotenv
 
 # Ensure project root is on sys.path so "app_utils" can be imported
 ROOT_DIR = os.path.dirname(__file__)
 if ROOT_DIR not in sys.path:
-    sys.path.append(ROOT_DIR)
+    sys.path.insert(0, ROOT_DIR)
 
 load_dotenv()
-
-# DEBUG: show file structure to diagnose import issues
-import os, sys
-print("PYTHON SYSPATH:", sys.path)
-print("PROJECT ROOT CONTENTS:", os.listdir(os.path.dirname(__file__)))
-try:
-    print("app_utils contents:", os.listdir(os.path.join(os.path.dirname(__file__), 'app_utils')))
-except Exception as e:
-    print("Could not list app_utils/:", e)
-
 
 import streamlit as st
 
