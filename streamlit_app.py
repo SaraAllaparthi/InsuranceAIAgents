@@ -17,7 +17,12 @@ from app_utils.payments import issue_refund
 from app_utils.db import Session, Claim
 
 # Sidebar logo and policy validation
-st.sidebar.image("logo.png", width=120)
+logo_path = os.path.join(ROOT_DIR, "logo.png")
+if os.path.exists(logo_path):
+    st.sidebar.image(logo_path, width=120)
+else:
+    st.sidebar.markdown("**Maverick AI Group**")
+
 st.sidebar.header("🔒 Policy Validation")
 policy_no = st.sidebar.text_input("Policy Number")
 if st.sidebar.button("Validate Policy"):
@@ -56,42 +61,30 @@ if validate_policy(policy_no):
         img_col, info_col = st.columns([1, 2])
         img_col.image(photo, caption="Uploaded Damage", use_column_width=True)
         info_col.write(f"**Decision:** {'Approved' if approved else 'Denied'}")
+
+        # Persist result
+        session = Session()
+        record = Claim(
+            policy_no=policy_no,
+            name=name,
+            email=email,
+            date_of_loss=date_of_loss,
+            location=location,
+            damage_info=damage_info,
+            weather_ok=int(weather_ok),
+            approved=int(approved),
+            notes=notes,
+            refund_tx=None
+        )
+
         if approved:
             tx_id = issue_refund(amount=damage_info["estimate"], claimant_email=email)
-            # Persist refund transaction
-            session = Session()
-            record = Claim(
-                policy_no=policy_no,
-                name=name,
-                email=email,
-                date_of_loss=date_of_loss,
-                location=location,
-                damage_info=damage_info,
-                weather_ok=int(weather_ok),
-                approved=int(approved),
-                notes=notes,
-                refund_tx=tx_id
-            )
-            session.add(record)
-            session.commit()
+            record.refund_tx = tx_id
             st.success(f"✅ Claim approved! Refund ID: {tx_id}")
         else:
-            # Persist denial
-            session = Session()
-            record = Claim(
-                policy_no=policy_no,
-                name=name,
-                email=email,
-                date_of_loss=date_of_loss,
-                location=location,
-                damage_info=damage_info,
-                weather_ok=int(weather_ok),
-                approved=int(approved),
-                notes=notes,
-                refund_tx=None
-            )
-            session.add(record)
-            session.commit()
             st.error(f"❌ Claim denied: {notes}")
+
+        session.add(record)
+        session.commit()
 else:
     st.info("Please validate your policy number in the sidebar to begin your claim.")
