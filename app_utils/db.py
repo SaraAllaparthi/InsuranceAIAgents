@@ -2,6 +2,11 @@ from sqlalchemy import create_engine, Column, Integer, String, Date, JSON
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 
+import os
+# Remove any existing file-based DB so we start with the new schema
+if os.path.exists(os.path.join(os.path.dirname(__file__), '..', 'claims.db')):
+    os.remove(os.path.join(os.path.dirname(__file__), '..', 'claims.db'))
+
 engine = create_engine('sqlite:///claims.db')
 Session = sessionmaker(bind=engine)
 Base = declarative_base()
