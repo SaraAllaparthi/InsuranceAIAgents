@@ -49,7 +49,7 @@ if validate_policy(policy_no):
         policy_holder = st.text_input("Name of policy holder")
         email = st.text_input("Email")
         date_of_loss = st.date_input("Date of damage")
-        postcode = st.text_input("Postcode"))
+        postcode = st.text_input("Postcode")
         photo = st.file_uploader("Upload damage photo", type=["jpg", "png"])
         submitted = st.form_submit_button("Submit claim")
 
