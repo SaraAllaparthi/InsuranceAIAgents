@@ -40,7 +40,7 @@ if st.sidebar.button("Validate Policy"):
         st.sidebar.error("❌ Invalid policy number.")
 
 # Main title and description
-st.title("🤖 AI Agents for Insurance Claim Processing")
+st.title("AI Agent - Insurance Claim Processing")
 st.markdown("Submit your property insurance claim and get an instant AI‑powered decision.")
 
 # Only show claim form if policy is valid
