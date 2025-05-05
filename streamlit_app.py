@@ -16,25 +16,19 @@ from app_utils.decision_engine import evaluate_claim
 from app_utils.payments import issue_refund
 from app_utils.db import Session, Claim
 
-# Sidebar logo and policy validation
+# Improved UI focused solely on Property Insurance Claim
+st.set_page_config(page_title="AI Agent for Property Insurance Claims", layout="wide")
+# Logo and updated title
+logo = # Display logo if present, otherwise show text
+# DEBUG: show contents of ROOT_DIR
+st.sidebar.write("**DEBUG: Root directory files**", os.listdir(ROOT_DIR))
 logo_path = os.path.join(ROOT_DIR, "logo.png")
 if os.path.exists(logo_path):
     st.sidebar.image(logo_path, width=120)
 else:
     st.sidebar.markdown("**Maverick AI Group**")
-
-st.sidebar.header("🔒 Policy Validation")
-policy_no = st.sidebar.text_input("Policy Number")
-if st.sidebar.button("Validate Policy"):
-    valid = validate_policy(policy_no)
-    if valid:
-        st.sidebar.success("✅ Policy validated. You may proceed.")
-    else:
-        st.sidebar.error("❌ Invalid policy number.")
-
-# Main title and description
-st.title("🤖 AI Agents for Insurance Claim Processing")
-st.markdown("Submit your property insurance claim and get an instant AI‑powered decision.")
+    st.title("AI Agents for Insurance Claim Processing")
+    st.markdown("Submit your property insurance claim and get an instant AI‑powered decision.")
 
 # Only show claim form if policy is valid
 if validate_policy(policy_no):
