@@ -9,6 +9,7 @@ if ROOT_DIR not in sys.path:
 load_dotenv()
 
 import streamlit as st
+from PIL import Image
 from app_utils.policy_api import validate_policy
 from app_utils.image_processing import analyze_damage
 from app_utils.weather_api import check_weather
@@ -17,7 +18,6 @@ from app_utils.payments import issue_refund
 from app_utils.db import Session, Claim
 
 # Sidebar logo and policy validation
-from PIL import Image
 logo_filename = None
 for fname in ["logo.png", "Logo.png"]:
     path = os.path.join(ROOT_DIR, fname)
@@ -26,7 +26,7 @@ for fname in ["logo.png", "Logo.png"]:
         break
 if logo_filename:
     img = Image.open(logo_filename)
-    st.sidebar.image(img, width=200, use_column_width=False)
+    st.sidebar.image(img, width=150, use_container_width=False)
 else:
     st.sidebar.markdown("**Maverick AI Group**")
 
@@ -66,7 +66,7 @@ if validate_policy(policy_no):
 
         # Show image and decision
         img_col, info_col = st.columns([1, 2])
-        img_col.image(photo, caption="Uploaded Damage", use_column_width=True)
+        img_col.image(photo, caption="Uploaded Damage", use_container_width=True)
         info_col.write(f"**Decision:** {'Approved' if approved else 'Denied'}")
 
         # Persist result
