@@ -1,5 +1,12 @@
 import os
+import sys
 from dotenv import load_dotenv
+
+# Ensure project root is on sys.path so "utils" can be imported
+ROOT_DIR = os.path.dirname(__file__)
+if ROOT_DIR not in sys.path:
+    sys.path.append(ROOT_DIR)
+
 load_dotenv()
 
 import streamlit as st
