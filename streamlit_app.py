@@ -40,23 +40,23 @@ if st.sidebar.button("Validate Policy"):
         st.sidebar.error("❌ Invalid policy number.")
 
 # Main title and description
-st.title("AI Agent - Insurance Claim Processing")
+st.title("🤖 AI Agents for Insurance Claim Processing")
 st.markdown("Submit your property insurance claim and get an instant AI‑powered decision.")
 
 # Only show claim form if policy is valid
 if validate_policy(policy_no):
     with st.form("claim_form", clear_on_submit=True):
-        name = st.text_input("Name of claimant")
+        policy_holder = st.text_input("Name of policy holder")
         email = st.text_input("Email")
         date_of_loss = st.date_input("Date of damage")
-        location = st.text_input("Location (city, country)")
+        postcode = st.text_input("Postcode"))
         photo = st.file_uploader("Upload damage photo", type=["jpg", "png"])
         submitted = st.form_submit_button("Submit claim")
 
     if submitted:
         with st.spinner("Analyzing image and checking weather..."):
-            damage_info = analyze_damage(photo)
-            weather_ok = check_weather(location, date_of_loss, damage_info["type"])
+            damage_info = analyze_damage(photo)  # note: postcode used instead of location for weather lookup
+            weather_ok = check_weather(postcode, date_of_loss, damage_info["type"])
             approved, notes = evaluate_claim(damage_info, weather_ok)
 
         # Show metrics
