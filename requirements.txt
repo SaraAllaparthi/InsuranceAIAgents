@@ -1,0 +1,8 @@
+streamlit
+torch
+torchvision
+yolov5
+requests
+pillow
+stripe
+sqlalchemy
