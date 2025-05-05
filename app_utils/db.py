@@ -9,6 +9,7 @@ Base = declarative_base()
 class Claim(Base):
     __tablename__ = 'claims'
     id = Column(Integer, primary_key=True)
+    policy_no = Column(String)
     name = Column(String)
     email = Column(String)
     date_of_loss = Column(Date)
