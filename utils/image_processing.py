@@ -1,5 +1,3 @@
-# If you don't have access to a paid model, you can use an open-source checkpoint like YOLOv5
-# (https://github.com/ultralytics/yolov5).
 import torch
 from PIL import Image
 import io
