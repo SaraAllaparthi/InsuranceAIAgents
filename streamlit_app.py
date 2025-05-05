@@ -1,9 +1,9 @@
+python
 import os
 from dotenv import load_dotenv
 load_dotenv()
 
 import streamlit as st
-from datetime import datetime
 from utils.image_processing import analyze_damage
 from utils.weather_api import check_weather
 from utils.decision_engine import evaluate_claim
@@ -23,23 +23,36 @@ with st.form("claim_form", clear_on_submit=True):
 
 if submitted:
     st.write("Processing your claim...")
+
+    # 1) Damage detection
     damage_info = analyze_damage(photo)
     st.write(f"Damage: {damage_info['type']}, estimate: €{damage_info['estimate']}")
+
+    # 2) Weather verification
     weather_ok = check_weather(location, date_of_loss, damage_info['type'])
     st.write(f"Weather match: {'Yes' if weather_ok else 'No'}")
+
+    # 3) Decision
     approved, notes = evaluate_claim(damage_info, weather_ok)
 
+    # 4) Persist audit log
     session = Session()
     record = Claim(
-        name=name, email=email, date_of_loss=date_of_loss,
-        location=location, damage_info=damage_info,
-        weather_ok=int(weather_ok), approved=int(approved),
-        notes=notes, refund_tx=None
+        name=name,
+        email=email,
+        date_of_loss=date_of_loss,
+        location=location,
+        damage_info=damage_info,
+        weather_ok=int(weather_ok),
+        approved=int(approved),
+        notes=notes,
+        refund_tx=None
     )
     session.add(record)
     session.commit()
 
     if approved:
+        # 5) Issue refund
         tx_id = issue_refund(amount=damage_info['estimate'], claimant_email=email)
         record.refund_tx = tx_id
         session.commit()
