@@ -1,5 +1,5 @@
 # Stub for policy validation – replace with real API call
-VALID_POLICIES = {"DEMO-12345", "PROP-67890"}
+VALID_POLICIES = {"DEMO-12345", "PROP-67890", "00000", "99999"}
 
 def validate_policy(policy_no: str) -> bool:
     """Return True if policy number exists in the system."""
