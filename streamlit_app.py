@@ -2,31 +2,35 @@ import os, sys
 from dotenv import load_dotenv
 
 # Ensure project root is on sys.path so "app_utils" can be imported
-ROOT_DIR = os.path.dirname(__file__)
+# Use absolute path to avoid dirname(__file__) returning empty
+ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
 if ROOT_DIR not in sys.path:
     sys.path.insert(0, ROOT_DIR)
+
+# DEBUG: print to console (view in Streamlit Cloud logs)
+print("DEBUG ROOT_DIR:", ROOT_DIR)
+print("DEBUG sys.path:", sys.path)
+try:
+    print("DEBUG root contents:", os.listdir(ROOT_DIR))
+    utils_path = os.path.join(ROOT_DIR, 'app_utils')
+    print("DEBUG app_utils exists?", os.path.exists(utils_path))
+    print("DEBUG app_utils contents:", os.listdir(utils_path))
+except Exception as e:
+    print("DEBUG error listing directories:", e)
 
 load_dotenv()
 
 import streamlit as st
 
-# DEBUG: show environment for imports
-st.write("**Debug: sys.path**", sys.path)
-try:
-    st.write("**Debug: root contents**", os.listdir(os.path.dirname(__file__)))
-    st.write("**Debug: app_utils contents**", os.listdir(os.path.join(os.path.dirname(__file__), 'app_utils')))
-except Exception as e:
-    st.write("Debug error listing directories:", e)
+st.set_page_config(page_title="Insurance Claim AI")
+st.title("🏠 Property Insurance Claim")
 
-# Now import utility modules
+# Now import utility modules (after sys.path fix)
 from app_utils.image_processing import analyze_damage
 from app_utils.weather_api import check_weather
 from app_utils.decision_engine import evaluate_claim
 from app_utils.payments import issue_refund
 from app_utils.db import Session, Claim
-
-st.set_page_config(page_title="Insurance Claim AI")
-st.title("🏠 Property Insurance Claim")
 
 with st.form("claim_form", clear_on_submit=True):
     name = st.text_input("Name of claimant")
