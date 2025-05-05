@@ -16,9 +16,6 @@ from app_utils.decision_engine import evaluate_claim
 from app_utils.payments import issue_refund
 from app_utils.db import Session, Claim
 
-# DEBUG: list files in root to verify logo presence
-st.sidebar.write("**DEBUG: Root files**", os.listdir(ROOT_DIR))
-
 # Sidebar logo and policy validation
 from PIL import Image
 logo_filename = None
@@ -28,9 +25,8 @@ for fname in ["logo.png", "Logo.png"]:
         logo_filename = path
         break
 if logo_filename:
-    # Load and display the image via PIL to avoid path issues
     img = Image.open(logo_filename)
-    st.sidebar.image(img, width=120)
+    st.sidebar.image(img, width=200, use_column_width=False)
 else:
     st.sidebar.markdown("**Maverick AI Group**")
 
