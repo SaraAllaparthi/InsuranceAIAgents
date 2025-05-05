@@ -2,7 +2,7 @@ import os
 import sys
 from dotenv import load_dotenv
 
-# Ensure project root is on sys.path so "utils" can be imported
+# Ensure project root is on sys.path so "app_utils" can be imported
 ROOT_DIR = os.path.dirname(__file__)
 if ROOT_DIR not in sys.path:
     sys.path.append(ROOT_DIR)
@@ -10,11 +10,11 @@ if ROOT_DIR not in sys.path:
 load_dotenv()
 
 import streamlit as st
-from utils.image_processing import analyze_damage
-from utils.weather_api import check_weather
-from utils.decision_engine import evaluate_claim
-from utils.payments import issue_refund
-from utils.db import Session, Claim
+from app_utils.image_processing import analyze_damage
+from app_utils.weather_api import check_weather
+from app_utils.decision_engine import evaluate_claim
+from app_utils.payments import issue_refund
+from app_utils.db import Session, Claim
 
 st.set_page_config(page_title="Insurance Claim AI")
 st.title("🏠 Property Insurance Claim")
