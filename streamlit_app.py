@@ -20,6 +20,16 @@ except Exception as e:
 
 
 import streamlit as st
+
+# DEBUG: show environment for imports
+st.write("**Debug: sys.path**", sys.path)
+try:
+    st.write("**Debug: root contents**", os.listdir(os.path.dirname(__file__)))
+    st.write("**Debug: app_utils contents**", os.listdir(os.path.join(os.path.dirname(__file__), 'app_utils')))
+except Exception as e:
+    st.write("Debug error listing directories:", e)
+
+# Now import utility modules
 from app_utils.image_processing import analyze_damage
 from app_utils.weather_api import check_weather
 from app_utils.decision_engine import evaluate_claim
