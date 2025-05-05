@@ -1,22 +1,3 @@
-### 1. Project Structure
-```
-insurance_claims_mvp/
-├── streamlit_app.py         # Frontend entrypoint
-├── utils/
-│   ├── __init__.py
-│   ├── image_processing.py  # functions to analyze uploaded images
-│   ├── weather_api.py        # functions to fetch & parse weather data
-│   ├── decision_engine.py    # core rules to validate and approve claims
-│   ├── payments.py           # refund integration
-│   └── db.py                 # audit log persistence
-├── requirements.txt         # pip dependencies
-├── Dockerfile               # containerization
-├── docker-compose.yml       # compose config
-└── README.md                # setup and run instructions
-```  
-
----
-
 ### 2. streamlit_app.py
 ```python
 import streamlit as st
