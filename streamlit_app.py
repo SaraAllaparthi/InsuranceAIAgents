@@ -1,4 +1,5 @@
-import os, sys
+import os
+import sys
 from dotenv import load_dotenv
 
 # Ensure project root is on sys.path so "app_utils" can be imported
@@ -17,33 +18,27 @@ from app_utils.decision_engine import evaluate_claim
 from app_utils.payments import issue_refund
 from app_utils.db import Session, Claim
 
-# Sidebar logo and policy validation
-logo_filename = None
-for fname in ["logo.png", "Logo.png"]:
-    path = os.path.join(ROOT_DIR, fname)
-    if os.path.exists(path):
-        logo_filename = path
-        break
-if logo_filename:
-    img = Image.open(logo_filename)
-    st.sidebar.image(img, width=150, use_container_width=False)
+# Sidebar: logo and policy validation
+logo_path = os.path.join(ROOT_DIR, "Logo.png")
+if os.path.exists(logo_path):
+    img = Image.open(logo_path)
+    st.sidebar.image(img, width=150)
 else:
     st.sidebar.markdown("**Maverick AI Group**")
 
 st.sidebar.header("🔒 Policy Validation")
 policy_no = st.sidebar.text_input("Policy Number")
 if st.sidebar.button("Validate Policy"):
-    valid = validate_policy(policy_no)
-    if valid:
+    if validate_policy(policy_no):
         st.sidebar.success("✅ Policy validated. You may proceed.")
     else:
         st.sidebar.error("❌ Invalid policy number.")
 
-# Main title and description
+# Main app title
 st.title("🤖 AI Agents for Insurance Claim Processing")
 st.markdown("Submit your property insurance claim and get an instant AI‑powered decision.")
 
-# Only show claim form if policy is valid
+# Show claim form only after successful policy validation
 if validate_policy(policy_no):
     with st.form("claim_form", clear_on_submit=True):
         policy_holder = st.text_input("Name of policy holder")
@@ -55,28 +50,28 @@ if validate_policy(policy_no):
 
     if submitted:
         with st.spinner("Analyzing image and checking weather..."):
-            damage_info = analyze_damage(photo)  # note: postcode used instead of location for weather lookup
+            damage_info = analyze_damage(photo)
             weather_ok = check_weather(postcode, date_of_loss, damage_info["type"])
             approved, notes = evaluate_claim(damage_info, weather_ok)
 
-        # Show metrics
+        # Display metrics
         col1, col2 = st.columns(2)
         col1.metric("Damage Estimate (€)", damage_info["estimate"])
-        col2.metric("Weather OK", "✅" if weather_ok else "❌")
+        col2.metric("Weather Corroboration", "✅" if weather_ok else "❌")
 
-        # Show image and decision
+        # Display uploaded image and decision
         img_col, info_col = st.columns([1, 2])
         img_col.image(photo, caption="Uploaded Damage", use_container_width=True)
         info_col.write(f"**Decision:** {'Approved' if approved else 'Denied'}")
 
-        # Persist result
+        # Persist claim to database
         session = Session()
         record = Claim(
             policy_no=policy_no,
-            name=name,
+            name=policy_holder,
             email=email,
             date_of_loss=date_of_loss,
-            location=location,
+            location=postcode,
             damage_info=damage_info,
             weather_ok=int(weather_ok),
             approved=int(approved),
