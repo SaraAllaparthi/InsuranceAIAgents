@@ -7,6 +7,7 @@ ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
 if ROOT_DIR not in sys.path:
     sys.path.insert(0, ROOT_DIR)
 
+# Load environment variables
 load_dotenv()
 
 import streamlit as st
@@ -34,11 +35,11 @@ if st.sidebar.button("Validate Policy"):
     else:
         st.sidebar.error("❌ Invalid policy number.")
 
-# Main app title
-st.title("Custom Insurance Claim Agent")
-st.markdown("Submit your property insurance claim and get an instant AI‑powered decision.")
+# Main title and description
+st.title("AI Agents for Insurance Claim Processing")
+st.markdown("Submit your property insurance claim and get an instant AI-powered decision.")
 
-# Show claim form only after successful policy validation
+# Only show claim form if policy is valid
 if validate_policy(policy_no):
     with st.form("claim_form", clear_on_submit=True):
         policy_holder = st.text_input("Name of policy holder")
@@ -54,17 +55,16 @@ if validate_policy(policy_no):
             weather_ok = check_weather(postcode, date_of_loss, damage_info["type"])
             approved, notes = evaluate_claim(damage_info, weather_ok)
 
-        # Display metrics
+        # Display results
         col1, col2 = st.columns(2)
         col1.metric("Damage Estimate (€)", damage_info["estimate"])
         col2.metric("Weather Corroboration", "✅" if weather_ok else "❌")
 
-        # Display uploaded image and decision
-        img_col, info_col = st.columns([1, 2])
+        img_col, info_col = st.columns([1,2])
         img_col.image(photo, caption="Uploaded Damage", use_container_width=True)
         info_col.write(f"**Decision:** {'Approved' if approved else 'Denied'}")
 
-        # Persist claim to database
+        # Persist claim
         session = Session()
         record = Claim(
             policy_no=policy_no,
@@ -78,14 +78,12 @@ if validate_policy(policy_no):
             notes=notes,
             refund_tx=None
         )
-
         if approved:
             tx_id = issue_refund(amount=damage_info["estimate"], claimant_email=email)
             record.refund_tx = tx_id
             st.success(f"✅ Claim approved! Refund ID: {tx_id}")
         else:
             st.error(f"❌ Claim denied: {notes}")
-
         session.add(record)
         session.commit()
 else:
