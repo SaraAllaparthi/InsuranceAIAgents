@@ -1,89 +1,188 @@
-import os
-import sys
-from dotenv import load_dotenv
-
-# Ensure project root is on sys.path
-ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
-if ROOT_DIR not in sys.path:
-    sys.path.insert(0, ROOT_DIR)
-
-load_dotenv()
+from __future__ import annotations
+import os, time, io, random, datetime as dt
+from typing import Literal
+from uuid import uuid4
 
 import streamlit as st
+from pydantic import BaseModel, Field, ValidationError
 from PIL import Image
-from app_utils.policy_api import validate_policy
-from app_utils.image_processing import analyze_damage
-from app_utils.weather_api import check_weather
-from app_utils.decision_engine import evaluate_claim
-from app_utils.payments import issue_refund
-from app_utils.db import Session, Claim
 
-# Sidebar logo and policy validation
-logo_path = os.path.join(ROOT_DIR, "Logo.png")
-if os.path.exists(logo_path):
-    img = Image.open(logo_path)
-    st.sidebar.image(img, width=150)
-else:
-    st.sidebar.markdown("**Maverick AI Group**")
+# ────────────────────────────────────────────────────────────────────────────────
+# 1️⃣  Mock back‑end helpers   (➡️ swap these for real services as you integrate)
+# ────────────────────────────────────────────────────────────────────────────────
 
-st.sidebar.header("🔒 Policy Validation")
-policy_no = st.sidebar.text_input("Policy Number")
-if st.sidebar.button("Validate Policy"):
-    if validate_policy(policy_no):
-        st.sidebar.success("✅ Policy validated. You may proceed.")
-    else:
-        st.sidebar.error("❌ Invalid policy number.")
+def validate_policy(policy_no: str) -> bool:
+    """Pretend the policy exists if it starts with "POL" and is 6+ chars."""
+    return policy_no.upper().startswith("POL") and len(policy_no) >= 6
 
-# Main title and description
-st.title("AI Agents for Insurance Claim Processing")
-st.markdown("Submit your property insurance claim and get an instant AI-powered decision.")
 
-# Claim form
-if validate_policy(policy_no):
-    with st.form("claim_form", clear_on_submit=True):
-        policy_holder = st.text_input("Name of policy holder")
-        email = st.text_input("Email")
-        date_of_loss = st.date_input("Date of damage")
-        postcode = st.text_input("Postcode")
-        photo = st.file_uploader("Upload damage photo", type=["jpg", "png"])
-        submitted = st.form_submit_button("Submit claim")
+def fetch_policy_holder(policy_no: str) -> dict:
+    """Return fake customer data."""
+    surnames = ["Müller", "Schmidt", "Meier", "Keller"]
+    GIVEN = random.choice(["Anna", "Luca", "Sven", "Laura"])
+    return {
+        "name": f"{GIVEN} {random.choice(surnames)}",
+        "email": f"{GIVEN.lower()}@example.com",
+        "iban": "CH93‑0076‑2011‑6238‑5295‑7",  # Swiss IBAN mask
+    }
 
-    if submitted:
-        with st.spinner("Processing claim..."):
-            damage_info = analyze_damage(photo)
-            weather_ok = check_weather(postcode, date_of_loss, damage_info["type"])
-            approved, notes = evaluate_claim(damage_info, weather_ok)
 
-        # Display results
-        col1, col2 = st.columns(2)
-        col1.metric("Damage Estimate (€)", damage_info["estimate"])
-        col2.metric("Weather Corroboration", "✅" if weather_ok else "❌")
+def analyze_damage(photo_file: io.BytesIO | None) -> dict:
+    """Fake computer‑vision estimate based on file size."""
+    if photo_file is None:
+        raise ValueError("No photo uploaded")
+    size_kb = len(photo_file.getbuffer()) / 1024
+    damage_type = "hail" if size_kb % 2 else "wind"
+    estimate = round(500 + size_kb * 1.3, 2)
+    return {"type": damage_type, "estimate": estimate}
 
-        img_col, info_col = st.columns([1, 2])
-        img_col.image(photo, caption="Uploaded Damage", use_container_width=True)
-        info_col.write(f"**Decision:** {'Approved' if approved else 'Denied'}")
 
-        # Save to DB
-        session = Session()
-        record = Claim(
-            policy_no=policy_no,
-            name=policy_holder,
-            email=email,
-            date_of_loss=date_of_loss,
-            location=postcode,
-            damage_info=damage_info,
-            weather_ok=int(weather_ok),
-            approved=int(approved),
-            notes=notes,
-            refund_tx=None
-        )
-        if approved:
-            tx_id = issue_refund(amount=damage_info["estimate"], claimant_email=email)
-            record.refund_tx = tx_id
-            st.success(f"✅ Claim approved! Refund ID: {tx_id}")
+def check_weather(postcode: str, date_of_loss: dt.date, damage_type: str) -> bool:
+    """Mock weather API: hail allowed only if date is within last 7 days."""
+    days_ago = (dt.date.today() - date_of_loss).days
+    if damage_type == "hail":
+        return days_ago <= 7
+    else:  # wind claims always corroborate for demo simplicity
+        return True
+
+
+def evaluate_claim(damage_info: dict, weather_ok: bool) -> tuple[bool, str]:
+    """Simple rules engine.
+    Approve if weather corroborates AND estimate ≤ CHF 5 000.
+    """
+    if not weather_ok:
+        return False, "Weather data does not corroborate the reported peril."
+    if damage_info["estimate"] > 5000:
+        return False, "Damage estimate exceeds instant‑settlement threshold."
+    return True, "Approved by rules engine."
+
+
+def issue_refund(amount: float, iban: str) -> str:
+    """Mock payments API → returns a transaction ID."""
+    time.sleep(1)  # look realistic 😉
+    return f"TX‑{uuid4().hex[:8].upper()}"
+
+# ────────────────────────────────────────────────────────────────────────────────
+# 2️⃣  Pydantic schemas  (clean validation + future extensibility)
+# ────────────────────────────────────────────────────────────────────────────────
+
+class ClaimInput(BaseModel):
+    policy_no: str = Field(..., regex=r"POL\w{3,}")
+    date_of_loss: dt.date
+    postcode: str = Field(..., min_length=4, max_length=10)
+    photo_file: io.BytesIO
+
+# ────────────────────────────────────────────────────────────────────────────────
+# 3️⃣  Streamlit UI
+# ────────────────────────────────────────────────────────────────────────────────
+
+st.set_page_config("AI Claim Agent", "🛡️", layout="centered")
+st.title("🏠 Insurance Claim AI Agent")
+st.caption("Demo – instant decisions with transparent behind‑the‑scenes trace")
+
+# --- Sidebar: policy validation -------------------------------------------------
+with st.sidebar:
+    st.image("https://i.imgur.com/cY9wKOU.png", width=140)
+    st.subheader("🔒 Policy Validation")
+    policy_no = st.text_input("Policy number", placeholder="POL123456")
+    val_btn = st.button("Validate ✨")
+    if val_btn:
+        is_valid = validate_policy(policy_no)
+        if is_valid:
+            st.success("Policy validated – continue below.")
+            st.session_state["policy_valid"] = True
+            st.session_state["policy_no"] = policy_no
         else:
-            st.error(f"❌ Claim denied: {notes}")
-        session.add(record)
-        session.commit()
+            st.error("Unknown policy number.")
+            st.session_state["policy_valid"] = False
+
+# --- Main form ------------------------------------------------------------------
+if st.session_state.get("policy_valid"):
+
+    holder = fetch_policy_holder(st.session_state["policy_no"])
+    with st.form("claim_form", clear_on_submit=False):
+        st.text_input("Policy holder", value=holder["name"], disabled=True)
+        st.date_input("Date of loss", key="dol", max_value=dt.date.today())
+        st.text_input("Post code", key="postcode")
+        photo = st.file_uploader("Upload a damage photo", type=["jpg", "png"], key="photo")
+        submit = st.form_submit_button("Submit claim →")
+
+    if submit:
+        # Validate input with Pydantic for robustness
+        try:
+            claim = ClaimInput(
+                policy_no=st.session_state["policy_no"],
+                date_of_loss=st.session_state["dol"],
+                postcode=st.session_state["postcode"],
+                photo_file=photo,
+            )
+        except ValidationError as e:
+            st.error("❌ Input validation failed:")
+            st.code(e.json(), language="json")
+            st.stop()
+
+        # Progress bar & trace log
+        progress = st.progress(0, text="Starting claim workflow…")
+        trace = st.empty()
+        logs: list[str] = []
+
+        def step(label: str, fn, p_idx: int):
+            logs.append(label)
+            progress.progress(p_idx / 6, text=label)
+            trace.code("\n".join(logs))
+            result = fn()
+            time.sleep(0.6)  # purely cosmetic
+            return result
+
+        # --- sequential steps ---------------------------------------------------
+        damage = step("Analyzing damage photo…", lambda: analyze_damage(photo), 1)
+        weather_ok = step(
+            "Checking weather data…",
+            lambda: check_weather(claim.postcode, claim.date_of_loss, damage["type"]),
+            2,
+        )
+        approved, reason = step(
+            "Running decision engine…",
+            lambda: evaluate_claim(damage, weather_ok),
+            3,
+        )
+        progress.progress(1.0, text="Workflow complete.")
+
+        # --- outcome panel -------------------------------------------------------
+        st.subheader("Result")
+        cols = st.columns(2)
+        cols[0].metric("Damage estimate", f"CHF {damage['estimate']:,}")
+        cols[1].metric("Weather corroboration", "✅" if weather_ok else "❌")
+
+        if photo:
+            st.image(photo, caption="Reported damage", use_column_width=True)
+
+        if approved:
+            st.success("✅ Claim approved!")
+            st.write(reason)
+            # Refund choice
+            refund_choice: Literal["default", "new"] = st.radio(
+                "Select payout account:",
+                ["Use account on record", "Enter a new IBAN"],
+                index=0,
+            )
+            if refund_choice == "Enter a new IBAN":
+                new_iban = st.text_input("New IBAN", max_chars=34, placeholder="CH…")
+                chosen_iban = new_iban if new_iban else holder["iban"]
+            else:
+                chosen_iban = holder["iban"]
+
+            if st.button("Process refund 💸"):
+                tx_id = issue_refund(damage["estimate"], chosen_iban)
+                st.balloons()
+                st.success(f"Refund of CHF {damage['estimate']:,} sent. Transaction ID: {tx_id}")
+        else:
+            st.error("❌ Claim denied.")
+            st.write(reason)
+            st.info("If you wish to appeal, contact claims@example.com.")
+
+        st.divider()
+        with st.expander("🔍 Show behind‑the‑scenes trace"):
+            st.code("\n".join(logs))
 else:
-    st.info("Please validate your policy number in the sidebar to begin your claim.")
+    st.info("Validate your policy number in the sidebar to begin.")
