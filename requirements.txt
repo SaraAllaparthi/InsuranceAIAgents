@@ -1,10 +1,10 @@
-streamlit
-python-dotenv
-torch
-torchvision
-yolov5
-requests
-pillow
-stripe
-sqlalchemy
-python-dotenv
+# ───── core – run the Streamlit demo ─────────────────────────────
+streamlit>=1.32         # UI framework
+pydantic>=1.10,<2.0     # data-validation (v1 syntax used in code)
+Pillow>=10.0            # image handling (PIL)
+
+# ───── optional – uncomment as you integrate features ───────────
+# requests>=2.30         # REST calls (e.g. real weather service)
+# python-dotenv>=1.0     # load env vars for API keys
+# openai>=1.23           # if you swap the rules engine for GPT
+# python-multipart>=0.0  # robust MIME parsing for uploads
