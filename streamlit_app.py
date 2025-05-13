@@ -1,3 +1,9 @@
+ """
+ ai_claims_demo_app.py  ▸  Streamlit front‑end + mock agent logic
+ -------------------------------------------------------------------
+ 13 May 2025 – minor tweak
+ • Replaced deprecated `use_column_width` with `use_container_width` in `st.image()`.
+ """
 from __future__ import annotations
 import os, time, random, datetime as dt
 from typing import Literal, Any
@@ -130,7 +136,7 @@ if st.session_state.get("policy_valid"):
         cols[1].metric("Weather corroboration", "✅" if weather_ok else "❌")
 
         if photo:
-            st.image(photo, caption="Reported damage", use_column_width=True)
+            st.image(photo, caption="Reported damage", use_container_width=True)
 
         if approved:
             st.success("✅ Claim approved!")
