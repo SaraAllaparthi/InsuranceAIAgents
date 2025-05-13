@@ -78,7 +78,7 @@ class ClaimInput(BaseModel):
 # 3️⃣  Streamlit UI
 # ────────────────────────────────────────────────────────────────────────────────
 
-st.set_page_config(page_title="Maverick Claims AI", page_icon=LOGO_PATH if os.path.exists(LOGO_PATH) else "🛡️", layout= "left")
+st.set_page_config(page_title="Maverick Claims AI", page_icon=LOGO_PATH if os.path.exists(LOGO_PATH) else "🛡️", layout= "centered")
 
 # Header with logo
 col_logo, col_head = st.columns([1, 3])
