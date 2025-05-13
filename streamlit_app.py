@@ -96,7 +96,7 @@ with st.sidebar:
     else:
         st.markdown("**Maverick AI Group**")
     st.subheader("🔒 Policy Validation")
-    policy_no = st.text_input("Policy number", placeholder="POL123456")
+    policy_no = st.text_input("Policy number", placeholder="POLXXXXX")
     if st.button("Validate ✨"):
         is_valid = validate_policy(policy_no)
         st.session_state["policy_valid"] = is_valid
