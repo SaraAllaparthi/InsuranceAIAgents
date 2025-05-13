@@ -1,17 +1,22 @@
- """
- ai_claims_demo_app.py  ▸  Streamlit front‑end + mock agent logic
- -------------------------------------------------------------------
- 13 May 2025 – minor tweak
- • Replaced deprecated `use_column_width` with `use_container_width` in `st.image()`.
- """
+"""
+ai_claims_demo_app.py ▸ Streamlit front‑end + mock agent logic
+13 May 2025 – minor tweak
+• Removed leading whitespace before module docstring (fixes IndentationError).
+• Logo path constant kept.
+"""
+
 from __future__ import annotations
 import os, time, random, datetime as dt
-from typing import Literal, Any
+from typing import Any
 from uuid import uuid4
 
 import streamlit as st
 from pydantic import BaseModel, Field, ValidationError
-from PIL import Image
+
+# ────────────────────────────────────────────────────────────────────────────────
+# 0️⃣  Branding assets
+# ────────────────────────────────────────────────────────────────────────────────
+LOGO_PATH = "assets/maverick_logo.png"   # ← place your PNG here
 
 # ────────────────────────────────────────────────────────────────────────────────
 # 1️⃣  Mock back‑end helpers   (➡️ swap these for real services as you integrate)
@@ -60,7 +65,7 @@ def issue_refund(amount: float, iban: str) -> str:
     return f"TX‑{uuid4().hex[:8].upper()}"
 
 # ────────────────────────────────────────────────────────────────────────────────
-# 2️⃣  Pydantic schema  (bytes instead of BytesIO) 
+# 2️⃣  Pydantic schema
 # ────────────────────────────────────────────────────────────────────────────────
 
 class ClaimInput(BaseModel):
@@ -73,12 +78,23 @@ class ClaimInput(BaseModel):
 # 3️⃣  Streamlit UI
 # ────────────────────────────────────────────────────────────────────────────────
 
-st.set_page_config("AI Claim Agent", "🛡️", layout="centered")
-st.title("🏠 Insurance Claim AI Agent")
-st.caption("Demo – instant decisions with transparent behind‑the‑scenes trace")
+st.set_page_config(page_title="Maverick Claims AI", page_icon=LOGO_PATH if os.path.exists(LOGO_PATH) else "🛡️", layout="centered")
 
+# Header with logo
+col_logo, col_head = st.columns([1, 3])
+with col_logo:
+    if os.path.exists(LOGO_PATH):
+        st.image(LOGO_PATH, width=80)
+with col_head:
+    st.title("🏠 Insurance Claim AI Agent")
+    st.caption("Demo – instant decisions with transparent behind‑the‑scenes trace")
+
+# Sidebar
 with st.sidebar:
-    st.image("https://i.imgur.com/cY9wKOU.png", width=140)
+    if os.path.exists(LOGO_PATH):
+        st.image(LOGO_PATH, width=160)
+    else:
+        st.markdown("**Maverick AI Group**")
     st.subheader("🔒 Policy Validation")
     policy_no = st.text_input("Policy number", placeholder="POL123456")
     if st.button("Validate ✨"):
@@ -87,6 +103,7 @@ with st.sidebar:
         st.session_state["policy_no"] = policy_no
         st.success("Policy validated" if is_valid else "Unknown policy number")
 
+# Main flow
 if st.session_state.get("policy_valid"):
     holder = fetch_policy_holder(st.session_state["policy_no"])
     with st.form("claim_form"):
